@@ -16,9 +16,23 @@ let db = null;
 // Initialize database connection
 async function connectToDatabase() {
   try {
-    client = new MongoClient(MONGODB_URI);
+    // Validate MongoDB URI
+    if (!MONGODB_URI || MONGODB_URI.trim() === '') {
+      throw new Error('MongoDB URI is not configured. Please set MONGODB_URI environment variable.');
+    }
+    
+    console.log('🔌 Attempting to connect to MongoDB...');
+    client = new MongoClient(MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000, // 5 second timeout
+      connectTimeoutMS: 10000, // 10 second timeout
+      socketTimeoutMS: 45000, // 45 second timeout
+    });
+    
     await client.connect();
     db = client.db(DATABASE_NAME);
+    
+    // Test the connection
+    await db.admin().ping();
     console.log('✅ Connected to MongoDB successfully!');
     
     // Ensure indexes exist
@@ -26,7 +40,14 @@ async function connectToDatabase() {
     
     return db;
   } catch (error) {
-    console.error('❌ Failed to connect to MongoDB:', error);
+    console.error('❌ Failed to connect to MongoDB:', error.message);
+    if (error.message.includes('ECONNREFUSED')) {
+      console.error('💡 Make sure MongoDB is running and accessible');
+    } else if (error.message.includes('Authentication failed')) {
+      console.error('💡 Check your MongoDB username and password');
+    } else if (error.message.includes('ENOTFOUND')) {
+      console.error('💡 Check your MongoDB connection string');
+    }
     throw error;
   }
 }

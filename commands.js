@@ -75,6 +75,15 @@ module.exports = [
         return;
       }
       
+      // Check if onboarding steps exist for this role
+      if (!data.config.onboarding[role] || !Array.isArray(data.config.onboarding[role]) || data.config.onboarding[role].length === 0) {
+        await interaction.reply({ 
+          content: `❌ **No training available!**\n\nNo onboarding steps found for ${ROLE_NAMES[role]}. Please contact an administrator.`, 
+          ephemeral: true 
+        });
+        return;
+      }
+      
       // Always reply to the interaction first
       await interaction.reply({ content: `Starting training for ${ROLE_NAMES[role]}...`, ephemeral: true });
       
@@ -109,9 +118,14 @@ module.exports = [
       const { data, saveData } = context;
       let role = String(interaction.options.getString('role'));
       console.log('/quiz received role:', role, 'Available quiz keys:', Object.keys(data.config.quizzes));
-      if (!data.config.quizzes[role]) {
+      
+      // Check if quiz exists for this role
+      if (!data.config.quizzes[role] || !Array.isArray(data.config.quizzes[role]) || data.config.quizzes[role].length === 0) {
         console.error('Quiz role not found:', role, 'Available:', Object.keys(data.config.quizzes));
-        await interaction.reply({ content: `Role not found. (role: '${role}')`, ephemeral: true });
+        await interaction.reply({ 
+          content: `❌ **No quiz available!**\n\nNo quiz found for ${ROLE_NAMES[role]}. Please contact an administrator.`, 
+          ephemeral: true 
+        });
         return;
       }
       
@@ -970,6 +984,8 @@ async function sendQuizStep(user, data, saveData, triggeringInteraction) {
         console.log('Role assignment - client available:', !!client);
         if (client) {
           console.log('Role assignment - guilds available:', client.guilds.cache.size);
+          let roleAssigned = false;
+          
           for (const guild of client.guilds.cache.values()) {
             try {
               console.log('Role assignment - checking guild:', guild.name);
@@ -977,13 +993,22 @@ async function sendQuizStep(user, data, saveData, triggeringInteraction) {
               if (member) {
                 console.log('Role assignment - member found, has role:', member.roles.cache.has(XD_CERTIFIED_ROLE_ID));
                 if (!member.roles.cache.has(XD_CERTIFIED_ROLE_ID)) {
-                  await member.roles.add(XD_CERTIFIED_ROLE_ID);
-                  console.log('Role assignment - role added successfully');
-                  await user.send('You have been given the **XD Certified** role on the server!');
-                  break; // Only assign once
+                  // Check if the role exists in the guild
+                  const role = guild.roles.cache.get(XD_CERTIFIED_ROLE_ID);
+                  if (role) {
+                    await member.roles.add(XD_CERTIFIED_ROLE_ID);
+                    console.log('Role assignment - role added successfully');
+                    await user.send('You have been given the **XD Certified** role on the server!');
+                    roleAssigned = true;
+                    break; // Only assign once
+                  } else {
+                    console.log('Role assignment - role not found in guild:', guild.name);
+                  }
                 } else {
                   console.log('Role assignment - user already has the role');
                   await user.send('You already have the **XD Certified** role!');
+                  roleAssigned = true;
+                  break;
                 }
               } else {
                 console.log('Role assignment - member not found in guild:', guild.name);
@@ -991,6 +1016,10 @@ async function sendQuizStep(user, data, saveData, triggeringInteraction) {
             } catch (e) {
               console.error('Error assigning role in guild:', guild.name, e);
             }
+          }
+          
+          if (!roleAssigned) {
+            await user.send('🎉 You passed the quiz! Please contact an administrator to get your **XD Certified** role.');
           }
         } else {
           // If no client available, just notify the user

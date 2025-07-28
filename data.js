@@ -245,8 +245,12 @@ async function loadData() {
     
     console.log('✅ Data loaded from MongoDB successfully!');
     console.log('Config keys after loading:', Object.keys(data.config));
+    console.log('Onboarding roles:', Object.keys(data.config.onboarding));
+    console.log('Quiz roles:', Object.keys(data.config.quizzes));
+    console.log('Resource roles:', Object.keys(data.config.resources));
   } catch (error) {
-    console.error('❌ Error loading data from database:', error);
+    console.error('❌ Error loading data from database:', error.message);
+    console.error('💡 This might be a database connection issue. Check your MongoDB URI and network connection.');
     throw error;
   }
 }
@@ -332,10 +336,13 @@ function checkPrerequisites(userId, targetRole, userStatus) {
   for (const prereqRole of prerequisites) {
     const prereqStatus = userStatus[prereqRole];
     if (!prereqStatus || !prereqStatus.certified) {
+      const missingRoleName = ROLE_NAMES[prereqRole] || 'Unknown Role';
+      const targetRoleName = ROLE_NAMES[targetRole] || 'Unknown Role';
+      
       return {
         allowed: false,
         missing: prereqRole,
-        message: `You must complete ${ROLE_NAMES[prereqRole]} training and certification before accessing ${ROLE_NAMES[targetRole]} training.`
+        message: `You must complete **${missingRoleName}** training and certification before accessing **${targetRoleName}** training.\n\nComplete the prerequisites first, then try again.`
       };
     }
   }
