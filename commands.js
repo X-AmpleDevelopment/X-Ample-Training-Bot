@@ -366,6 +366,60 @@ module.exports = [
       await interaction.reply({ content: reply, ephemeral: true });
     }
   },
+  // Set Announce Channel
+  {
+    data: new SlashCommandBuilder()
+      .setName('setannounce')
+      .setDescription('Set the announcement channel (config role only)')
+      .addChannelOption(opt =>
+        opt.setName('channel').setDescription('Channel for announcements').setRequired(true)
+      ),
+    async execute(interaction, context) {
+      if (!isConfigRole(interaction.member)) {
+        await interaction.reply({ content: 'You do not have permission to set the announcement channel.', ephemeral: true });
+        return;
+      }
+      
+      const channel = interaction.options.getChannel('channel');
+      const { data, saveData } = context;
+      
+      // Update config
+      data.config.announceChannel = channel.id;
+      saveData();
+      
+      await interaction.reply({ 
+        content: `✅ Announcement channel set to <#${channel.id}>`, 
+        ephemeral: true 
+      });
+    }
+  },
+  // View Announce Channel
+  {
+    data: new SlashCommandBuilder()
+      .setName('announce')
+      .setDescription('View current announcement channel (config role only)'),
+    async execute(interaction, context) {
+      if (!isConfigRole(interaction.member)) {
+        await interaction.reply({ content: 'You do not have permission to view the announcement channel.', ephemeral: true });
+        return;
+      }
+      
+      const { data } = context;
+      const channelId = data.config.announceChannel;
+      
+      if (channelId) {
+        await interaction.reply({ 
+          content: `📢 Current announcement channel: <#${channelId}>`, 
+          ephemeral: true 
+        });
+      } else {
+        await interaction.reply({ 
+          content: '❌ No announcement channel set. Use `/setannounce` to set one.', 
+          ephemeral: true 
+        });
+      }
+    }
+  },
   // Database Stats
   {
     data: new SlashCommandBuilder()
