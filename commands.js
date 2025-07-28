@@ -603,15 +603,20 @@ module.exports = [
       ),
     async execute(interaction) {
       const feedbackMsg = interaction.options.getString('message');
-      for (const guild of interaction.client.guilds.cache.values()) {
-        const admins = guild.members.cache.filter(m => m.roles.cache.some(r => r.name === 'XD | Administrator'));
-        for (const admin of admins.values()) {
-          try {
-            await admin.send(`Feedback from ${interaction.user.tag}: ${feedbackMsg}`);
-          } catch {}
+      const feedbackChannelId = '1399379467863982090';
+      
+      try {
+        const feedbackChannel = await interaction.client.channels.fetch(feedbackChannelId);
+        if (feedbackChannel) {
+          await feedbackChannel.send(`📝 **Feedback from ${interaction.user}:**\n${feedbackMsg}`);
+          await interaction.reply({ content: '✅ Thank you for your feedback! It has been sent to the feedback channel.', ephemeral: true });
+        } else {
+          await interaction.reply({ content: '❌ Error: Could not find the feedback channel. Please contact an administrator.', ephemeral: true });
         }
+      } catch (error) {
+        console.error('Error sending feedback:', error);
+        await interaction.reply({ content: '❌ Error sending feedback. Please try again later.', ephemeral: true });
       }
-      await interaction.reply({ content: 'Thank you for your feedback!', ephemeral: true });
     }
   },
   // Roleinfo
