@@ -1,0 +1,12 @@
+{
+  "userStatus": {},
+  "userQuizProgress": {},
+  "userTrainingProgress": {},
+  "config": {
+    "onboarding": {},
+    "quizzes": {},
+    "resources": {},
+    "announceChannel": null,
+    "reminderFrequencyHours": 24
+  }
+}

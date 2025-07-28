@@ -1,0 +1,31 @@
+{
+  "name": "x-ample-trainer",
+  "version": "1.0.0",
+  "description": "Discord bot for training new staff members on their roles and responsibilities",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "training",
+    "staff",
+    "mongodb"
+  ],
+  "author": "X-Ample Development",
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "mongodb": "^6.3.0",
+    "dotenv": "^17.2.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
