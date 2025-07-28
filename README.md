@@ -40,6 +40,8 @@ DISCORD_TOKEN=your_discord_bot_token_here
 MONGODB_URI=mongodb+srv://iamxample:Yamool2003!@eu-west-1-cluster.d50ic.mongodb.net/
 ```
 
+**Note**: The MongoDB URI is now loaded from environment variables for security. If not set, it will use the default connection string.
+
 ### 3. **Startup Command**
 Set the startup command in Pterodactyl:
 ```bash

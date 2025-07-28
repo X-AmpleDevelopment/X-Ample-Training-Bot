@@ -1,7 +1,7 @@
 const { MongoClient } = require('mongodb');
 
-// MongoDB connection string
-const MONGODB_URI = 'mongodb+srv://iamxample:Yamool2003!@eu-west-1-cluster.d50ic.mongodb.net/';
+// MongoDB connection string - use environment variable or fallback
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://iamxample:Yamool2003!@eu-west-1-cluster.d50ic.mongodb.net/';
 const DATABASE_NAME = 'xample_trainer';
 const COLLECTIONS = {
   USER_STATUS: 'user_status',
