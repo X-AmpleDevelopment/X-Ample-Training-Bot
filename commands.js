@@ -420,6 +420,51 @@ module.exports = [
       }
     }
   },
+  // Test Announcement
+  {
+    data: new SlashCommandBuilder()
+      .setName('testannounce')
+      .setDescription('Test the announcement channel (config role only)'),
+    async execute(interaction, context) {
+      if (!isConfigRole(interaction.member)) {
+        await interaction.reply({ content: 'You do not have permission to test announcements.', ephemeral: true });
+        return;
+      }
+      
+      const { data } = context;
+      const channelId = data.config.announceChannel;
+      
+      if (!channelId) {
+        await interaction.reply({ 
+          content: '❌ No announcement channel set. Use `/setannounce` to set one.', 
+          ephemeral: true 
+        });
+        return;
+      }
+      
+      try {
+        const announceChannel = await interaction.client.channels.fetch(channelId);
+        if (announceChannel) {
+          await announceChannel.send(`🧪 **Test Announcement** - This is a test message from the X-Ample Training bot!`);
+          await interaction.reply({ 
+            content: `✅ Test announcement sent to <#${channelId}>`, 
+            ephemeral: true 
+          });
+        } else {
+          await interaction.reply({ 
+            content: `❌ Could not find channel <#${channelId}>`, 
+            ephemeral: true 
+          });
+        }
+      } catch (error) {
+        console.error('Error sending test announcement:', error);
+        await interaction.reply({ 
+          content: `❌ Error sending test announcement: ${error.message}`, 
+          ephemeral: true 
+        });
+      }
+    }
+  },
   // Database Stats
   {
     data: new SlashCommandBuilder()
@@ -825,6 +870,18 @@ async function sendOnboardingStep(user, data, saveData, triggeringInteraction) {
     data.userStatus[user.id] = userStatus;
     data.userTrainingProgress[user.id] = undefined;
     saveData();
+    
+    // Send announcement if channel is set
+    if (data.config.announceChannel) {
+      try {
+        const announceChannel = await user.client.channels.fetch(data.config.announceChannel);
+        if (announceChannel) {
+          await announceChannel.send(`🎉 **Training Complete!** ${user} has completed their **${ROLE_NAMES[progress.role]}** onboarding training!`);
+        }
+      } catch (error) {
+        console.error('Error sending announcement:', error);
+      }
+    }
   }
 }
 
@@ -888,6 +945,19 @@ async function sendQuizStep(user, data, saveData, triggeringInteraction) {
       
       // Update in-memory data
       data.userStatus[user.id] = userStatus;
+      
+      // Send announcement if channel is set
+      if (data.config.announceChannel) {
+        try {
+          const announceChannel = await user.client.channels.fetch(data.config.announceChannel);
+          if (announceChannel) {
+            await announceChannel.send(`🏅 **Certification Achieved!** ${user} has passed the **${ROLE_NAMES[progress.role]}** quiz and is now certified!`);
+          }
+        } catch (error) {
+          console.error('Error sending announcement:', error);
+        }
+      }
+      
       // Assign XD Certified role if possible
       try {
         // Try to get the client from triggeringInteraction first
