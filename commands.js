@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { ROLE_IDS, ROLE_NAMES, checkPrerequisites, BRANCHING_SCENARIOS } = require('./data');
+const { ROLE_IDS, ROLE_NAMES, checkPrerequisites, BRANCHING_SCENARIOS, loadUserDataFromDB, saveUserDataToDB } = require('./data');
 
 const roleDescriptions = {
   [ROLE_IDS['XD | Support']]: 'XD | Support help users, answer questions, and escalate issues to XD | Administrators when needed.',
@@ -60,8 +60,11 @@ module.exports = [
       const role = String(interaction.options.getString('role'));
       console.log('/trainme received role:', role, 'Available onboarding keys:', Object.keys(data.config.onboarding));
       
+      // Load user data from database
+      const userData = await loadUserDataFromDB(interaction.user.id);
+      const userStatus = userData.userStatus || {};
+      
       // Check prerequisites
-      const userStatus = data.userStatus[interaction.user.id] || {};
       const prereqCheck = checkPrerequisites(interaction.user.id, role, userStatus);
       
       if (!prereqCheck.allowed) {
@@ -77,7 +80,10 @@ module.exports = [
       
       // Then try to send the training
       try {
+        // Update in-memory data and save to database
         data.userTrainingProgress[interaction.user.id] = { role, step: 0 };
+        await saveUserDataToDB(interaction.user.id, { userTrainingProgress: { role, step: 0 } });
+        
         await sendOnboardingStep(interaction.user, data, saveData, interaction);
         await interaction.editReply({ content: `Check your DMs for onboarding steps for ${ROLE_NAMES[role]}!`, ephemeral: true });
       } catch (error) {
@@ -109,8 +115,11 @@ module.exports = [
         return;
       }
       
+      // Load user data from database
+      const userData = await loadUserDataFromDB(interaction.user.id);
+      const userStatus = userData.userStatus || {};
+      
       // Check prerequisites
-      const userStatus = data.userStatus[interaction.user.id] || {};
       const prereqCheck = checkPrerequisites(interaction.user.id, role, userStatus);
       
       if (!prereqCheck.allowed) {
@@ -126,7 +135,10 @@ module.exports = [
       
       // Then try to send the quiz
       try {
+        // Update in-memory data and save to database
         data.userQuizProgress[interaction.user.id] = { role, q: 0, correct: 0 };
+        await saveUserDataToDB(interaction.user.id, { userQuizProgress: { role, q: 0, correct: 0 } });
+        
         await sendQuizStep(interaction.user, data, saveData, interaction);
         await interaction.editReply({ content: `Quiz started for ${ROLE_NAMES[role]}! Check your DMs.`, ephemeral: true });
       } catch (error) {
@@ -141,11 +153,16 @@ module.exports = [
     data: new SlashCommandBuilder().setName('myprogress').setDescription('Show your training and certification progress'),
     async execute(interaction, context) {
       const { data } = context;
-      const status = data.userStatus[interaction.user.id];
-      if (!status) {
+      
+      // Load user data from database
+      const userData = await loadUserDataFromDB(interaction.user.id);
+      const status = userData.userStatus;
+      
+      if (!status || Object.keys(status).length === 0) {
         await interaction.reply({ content: 'No progress found. Start with /trainme.', ephemeral: true });
         return;
       }
+      
       let reply = '**Your Training Progress:**\n';
       for (const role of Object.keys(status)) {
         reply += `\n__${ROLE_NAMES[role]}__\n`;
@@ -322,6 +339,31 @@ module.exports = [
         content: `✅ Media added to step ${stepIndex + 1} for ${ROLE_NAMES[role]}.`, 
         ephemeral: true 
       });
+    }
+  },
+  // Debug User Data
+  {
+    data: new SlashCommandBuilder()
+      .setName('debuguser')
+      .setDescription('Debug user data (config role only)')
+      .addUserOption(opt =>
+        opt.setName('user').setDescription('User to debug').setRequired(true)
+      ),
+    async execute(interaction, context) {
+      if (!isConfigRole(interaction.member)) {
+        await interaction.reply({ content: 'You do not have permission to debug user data.', ephemeral: true });
+        return;
+      }
+      
+      const targetUser = interaction.options.getUser('user');
+      const userData = await loadUserDataFromDB(targetUser.id);
+      
+      let reply = `**🔍 Debug Data for ${targetUser.tag}:**\n\n`;
+      reply += `**User Status:**\n${JSON.stringify(userData.userStatus, null, 2)}\n\n`;
+      reply += `**Quiz Progress:**\n${JSON.stringify(userData.userQuizProgress, null, 2)}\n\n`;
+      reply += `**Training Progress:**\n${JSON.stringify(userData.userTrainingProgress, null, 2)}`;
+      
+      await interaction.reply({ content: reply, ephemeral: true });
     }
   },
   // Database Stats
@@ -709,9 +751,24 @@ async function sendOnboardingStep(user, data, saveData, triggeringInteraction) {
         await triggeringInteraction.followUp({ content: 'I could not send you a DM. Please check your privacy settings.', ephemeral: true });
       }
     }
-    data.userStatus[user.id] = data.userStatus[user.id] || {};
-    data.userStatus[user.id][progress.role] = data.userStatus[user.id][progress.role] || {};
-    data.userStatus[user.id][progress.role].onboarding = true;
+    
+    // Load current user status from database
+    const userData = await loadUserDataFromDB(user.id);
+    const userStatus = userData.userStatus || {};
+    console.log('Training completion - User data loaded for', user.id, ':', userStatus);
+    
+    // Update user status
+    userStatus[progress.role] = userStatus[progress.role] || {};
+    userStatus[progress.role].onboarding = true;
+    
+    // Save to database
+    await saveUserDataToDB(user.id, { 
+      userStatus: userStatus,
+      userTrainingProgress: null 
+    });
+    
+    // Update in-memory data
+    data.userStatus[user.id] = userStatus;
     data.userTrainingProgress[user.id] = undefined;
     saveData();
   }
@@ -760,10 +817,23 @@ async function sendQuizStep(user, data, saveData, triggeringInteraction) {
           await triggeringInteraction.followUp({ content: 'You passed the quiz!', ephemeral: true });
         }
       }
-      data.userStatus[user.id] = data.userStatus[user.id] || {};
-      data.userStatus[user.id][progress.role] = data.userStatus[user.id][progress.role] || {};
-      data.userStatus[user.id][progress.role].quiz = true;
-      data.userStatus[user.id][progress.role].certified = true;
+      // Load current user status from database
+      const userData = await loadUserDataFromDB(user.id);
+      const userStatus = userData.userStatus || {};
+      
+      // Update user status
+      userStatus[progress.role] = userStatus[progress.role] || {};
+      userStatus[progress.role].quiz = true;
+      userStatus[progress.role].certified = true;
+      
+      // Save to database
+      await saveUserDataToDB(user.id, { 
+        userStatus: userStatus,
+        userQuizProgress: null 
+      });
+      
+      // Update in-memory data
+      data.userStatus[user.id] = userStatus;
       // Assign XD Certified role if possible
       try {
         // Try to get the client from triggeringInteraction first
@@ -810,10 +880,23 @@ async function sendQuizStep(user, data, saveData, triggeringInteraction) {
           await triggeringInteraction.followUp({ content: `You got ${progress.correct}/${quiz.length} correct. Try again.`, ephemeral: true });
         }
       }
-      data.userStatus[user.id] = data.userStatus[user.id] || {};
-      data.userStatus[user.id][progress.role] = data.userStatus[user.id][progress.role] || {};
-      data.userStatus[user.id][progress.role].quiz = false;
-      data.userStatus[user.id][progress.role].certified = false;
+      // Load current user status from database
+      const userData = await loadUserDataFromDB(user.id);
+      const userStatus = userData.userStatus || {};
+      
+      // Update user status
+      userStatus[progress.role] = userStatus[progress.role] || {};
+      userStatus[progress.role].quiz = false;
+      userStatus[progress.role].certified = false;
+      
+      // Save to database
+      await saveUserDataToDB(user.id, { 
+        userStatus: userStatus,
+        userQuizProgress: null 
+      });
+      
+      // Update in-memory data
+      data.userStatus[user.id] = userStatus;
     }
     data.userQuizProgress[user.id] = undefined;
     saveData();

@@ -1,4 +1,9 @@
 require('dotenv').config();
+
+// Debug: Check if environment variables are loaded
+console.log('Environment check:');
+console.log('DISCORD_TOKEN exists:', !!process.env.DISCORD_TOKEN);
+console.log('MONGODB_URI exists:', !!process.env.MONGODB_URI);
 const { Client, GatewayIntentBits, Collection, ActionRowBuilder, ButtonBuilder } = require('discord.js');
 const { initializeDatabase, data, saveData, loadUserDataFromDB, saveUserDataToDB, ROLE_IDS, ROLE_NAMES } = require('./data');
 const { sendOnboardingStep, sendQuizStep } = require('./commands');
