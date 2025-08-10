@@ -136,6 +136,60 @@ client.on('interactionCreate', async interaction => {
     }
   }
   
+  // Handle jobs pagination buttons
+  if (interaction.customId.startsWith('jobs_page_')) {
+    try {
+      const parts = interaction.customId.split('_');
+      const action = parts[1];
+      const page = parseInt(parts[2]);
+      const departmentFilter = parts[3] === 'none' ? null : parts[3];
+      const typeFilter = parts[4] === 'none' ? null : parts[4];
+      const locationFilter = parts[5] === 'none' ? null : parts[5];
+      
+      if (action === 'page' && !isNaN(page)) {
+        const { data } = require('./data');
+        const positions = data.config.vacancies?.positions || {};
+        let filteredPositions = Object.values(positions).filter(pos => pos.status === 'active');
+        
+        // Apply filters
+        if (departmentFilter) {
+          filteredPositions = filteredPositions.filter(pos => 
+            pos.department.toLowerCase().includes(departmentFilter.toLowerCase())
+          );
+        }
+        
+        if (typeFilter) {
+          filteredPositions = filteredPositions.filter(pos => pos.type === typeFilter);
+        }
+        
+        if (locationFilter) {
+          filteredPositions = filteredPositions.filter(pos => pos.location === locationFilter);
+        }
+        
+        // Sort by creation date (newest first)
+        filteredPositions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        
+        const positionsPerPage = 5;
+        const totalPages = Math.ceil(filteredPositions.length / positionsPerPage);
+        
+        if (page < 1 || page > totalPages) {
+          await interaction.reply({ content: 'Invalid page number.', ephemeral: true });
+          return;
+        }
+        
+        const embed = require('./commands').createJobsEmbed(filteredPositions, page, totalPages, positionsPerPage, departmentFilter, typeFilter, locationFilter);
+        const components = require('./commands').createJobsPaginationButtons(page, totalPages, filteredPositions, departmentFilter, typeFilter, locationFilter);
+        
+        await interaction.update({ embeds: [embed], components: components });
+        return;
+      }
+    } catch (error) {
+      console.error('Error handling jobs pagination:', error);
+      await interaction.reply({ content: 'An error occurred while processing pagination. Please try again.', ephemeral: true });
+      return;
+    }
+  }
+  
   if (!interaction.isChatInputCommand()) return;
   
   const command = client.commands.get(interaction.commandName);

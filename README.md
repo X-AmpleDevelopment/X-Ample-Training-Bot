@@ -1,172 +1,210 @@
-# X-Ample Training Bot
+# X-Ample Trainer Discord Bot
 
-A comprehensive Discord bot for training new staff members on their roles and responsibilities. Features interactive training, quizzes, prerequisites, branching scenarios, and MongoDB integration.
+A comprehensive Discord bot for staff training, onboarding, and job vacancy management.
 
-## 🚀 Features
+## 🚀 **Features**
 
-- **Interactive Training**: Step-by-step onboarding with media support
-- **Prerequisites System**: Enforce training progression (Support → Admin → SLT)
-- **Branching Scenarios**: Interactive decision-making scenarios
-- **Quiz System**: Text-based quizzes with automatic certification
-- **Media Support**: Images and videos in training steps
-- **MongoDB Integration**: Scalable database storage
-- **Role Assignment**: Automatic "XD Certified" role assignment
-- **Progress Tracking**: User progress and leaderboards
-- **Admin Panel**: Configuration and statistics
+### **Core Training System**
+- **Interactive Onboarding**: Step-by-step training for different staff roles
+- **Quiz System**: Automated testing with role-based questions
+- **Prerequisites**: Role progression system (Support → Admin → SLT)
+- **Branching Scenarios**: Interactive decision-making training
+- **Progress Tracking**: Monitor training completion and quiz performance
 
-## 📋 Prerequisites
+### **Advanced Job Vacancy System**
+- **Comprehensive Management**: Add, edit, delete, and list job vacancies
+- **Application System**: Users can apply directly through Discord
+- **Application Tracking**: Leadership can review and manage applications
+- **Status Management**: Track application status (pending, review, interview, accepted, rejected)
+- **Auto-Notifications**: Automatic alerts for new applications
+- **Channel Configuration**: Set announcement channels for vacancies
 
-- Node.js 18+ 
-- MongoDB Atlas account
-- Discord Bot Token
-- Pterodactyl Panel access
+### **Interface Improvements**
+- **Rich Embeds**: Beautiful, informative Discord embeds with colors and formatting
+- **Smart Pagination**: Navigate through job listings with interactive buttons
+- **Dynamic Colors**: Color-coded embeds based on vacancy status and type
+- **Deadline Tracking**: Visual indicators for urgent deadlines
+- **Filtering System**: Find jobs by department, type, and location
+- **Responsive Design**: Mobile-friendly interface with clear navigation
 
-## 🔧 Pterodactyl Deployment
+### **Leadership Tools**
+- **Dashboard**: Real-time overview of server operations and metrics
+- **Analytics**: Detailed reports on training progress, quiz performance, and applications
+- **Staff Management**: View and manage staff members and their roles
+- **Reporting System**: Generate comprehensive reports in multiple formats
+- **Performance Tracking**: Monitor staff completion rates and activity
 
-### 1. **Upload Files**
-Upload all project files to your Pterodactyl server:
-- `index.js`
-- `commands.js`
-- `data.js`
-- `database.js`
-- `package.json`
-- `README.md`
-
-### 2. **Environment Variables**
-Set these environment variables in your Pterodactyl panel:
-
-```env
-DISCORD_TOKEN=your_discord_bot_token_here
-MONGODB_URI=mongodb+srv://iamxample:Yamool2003!@eu-west-1-cluster.d50ic.mongodb.net/
-```
-
-**Note**: The MongoDB URI is now loaded from environment variables for security. If not set, it will use the default connection string.
-
-### 3. **Startup Command**
-Set the startup command in Pterodactyl:
-```bash
-npm install && npm start
-```
-
-### 4. **Node.js Version**
-Ensure your Pterodactyl server is set to Node.js 18 or higher.
-
-## 🎯 Bot Commands
+## 📋 **Commands**
 
 ### **User Commands**
-- `/trainme role:XD | Support` - Start training for a role
-- `/quiz role:XD | Support` - Take quiz for a role
-- `/myprogress` - View your training progress
-- `/trainingpath` - Show progression path and prerequisites
-- `/leaderboard` - View certified users
-- `/resources` - Get role-specific resources
-- `/faq` - View frequently asked questions
-- `/feedback message` - Send feedback to admins
-- `/scenarios role:XD | Support` - Start branching scenarios
+- `/trainme` - Start training for a specific role
+- `/quiz` - Take a quiz for role certification
+- `/scenarios` - Practice decision-making scenarios
+- `/jobs` - View available job openings with filtering
+- `/apply` - Apply for a job vacancy
 
-### **Admin Commands** (Config Role Only)
-- `/dbstats` - View database statistics
-- `/staffstats` - View staff certification stats
-- `/setonboarding role:XD | Support steps:Step 1|Step 2` - Modify training
-- `/setquiz role:XD | Support qapairs:Q1|A1|Q2|A2` - Modify quizzes
-- `/setresource role:XD | Support links:link1 link2` - Modify resources
-- `/addmedia role:XD | Support step:1 mediaurl:url mediatype:image` - Add media
+### **Leadership Commands**
+- `/vacancies add` - Add new job vacancy
+- `/vacancies edit` - Edit existing vacancy
+- `/vacancies delete` - Delete vacancy
+- `/vacancies list` - List all vacancies
+- `/vacancies setchannel` - Set announcement channel
+- `/vacancies announce` - Announce specific vacancy
+- `/vacancies applications` - Manage job applications
 
-## 🏗️ Architecture
+### **Leadership Dashboard**
+- `/leadership dashboard` - View leadership dashboard
+- `/leadership analytics` - View detailed analytics
+- `/leadership staff` - Manage staff members
+- `/leadership reports` - Generate reports
 
-### **Files Structure**
-```
-├── index.js          # Main bot entry point
-├── commands.js       # All slash commands
-├── data.js          # Data management & MongoDB integration
-├── database.js      # MongoDB operations
-├── package.json     # Dependencies & scripts
-└── README.md        # This file
-```
+### **Configuration Commands**
+- `/config` - Configure bot settings (Config Role only)
 
-### **Database Collections**
-- `user_status` - User training and certification status
-- `user_quiz_progress` - Active quiz sessions
-- `user_training_progress` - Active training sessions
-- `config` - Bot configuration (training, quizzes, resources)
+## 🔐 **Access Control**
 
-## 🔐 Security
+### **Role-Based Permissions**
+- **XD | Support**: Basic training and quiz access
+- **XD | Administrator**: Full training management + vacancy management
+- **XD | SLT**: All permissions + leadership tools
+- **Config Role**: Bot configuration access
 
-- **Role-Based Permissions**: Config commands restricted to specific role
-- **Prerequisites**: Enforced training progression
-- **MongoDB Security**: Connection string includes authentication
-- **Environment Variables**: Sensitive data stored securely
+### **Command Restrictions**
+- **Public Commands**: `/trainme`, `/quiz`, `/scenarios`, `/jobs`, `/apply`
+- **Leadership Commands**: All `/vacancies` subcommands, `/leadership` commands
+- **Admin Commands**: `/config` and system management
 
-## 📊 Monitoring
+## 💼 **Job Vacancy System Details**
 
-### **Database Statistics**
-Use `/dbstats` to monitor:
-- Total users with status
-- Active quiz sessions
-- Active training sessions
-- Configuration records
+### **Vacancy Information Stored**
+- **Basic Details**: Title, department, description, requirements
+- **Employment Info**: Type (full-time, part-time, contract, internship), location, salary
+- **Timing**: Deadline, creation date, status
+- **Metadata**: Unique ID, creator information
 
-### **Logs**
-Monitor these logs in Pterodactyl:
-- Database connection status
-- Command execution
-- Error handling
-- User interactions
+### **Application Process**
+1. User views available jobs with `/jobs`
+2. User applies with `/apply <vacancy_id> <message> <role>`
+3. Leadership receives notification in configured channel
+4. Leadership reviews application with `/vacancies applications view`
+5. Leadership updates status with `/vacancies applications status`
 
-## 🚨 Troubleshooting
+### **Application Statuses**
+- **Pending**: New application awaiting review
+- **Under Review**: Application being evaluated
+- **Interview Scheduled**: Candidate invited for interview
+- **Accepted**: Application approved
+- **Rejected**: Application declined
+- **Withdrawn**: Candidate withdrew application
 
-### **Common Issues**
+## 📊 **Leadership Dashboard Features**
 
-1. **Bot not responding**
-   - Check Discord token in environment variables
-   - Verify bot has proper permissions
-   - Check Pterodactyl logs
+### **Key Metrics**
+- Total staff count and active training sessions
+- Job vacancy statistics and application counts
+- Training completion rates by role
+- Real-time activity monitoring
 
-2. **Database connection failed**
-   - Verify MongoDB URI in environment variables
-   - Check network connectivity
-   - Ensure MongoDB Atlas IP whitelist
+### **Analytics Types**
+- **Training Progress**: Completion rates and active sessions
+- **Quiz Performance**: Success rates and question statistics
+- **Job Applications**: Application volume and status distribution
+- **Staff Activity**: Role completion and engagement metrics
 
-3. **Commands not working**
-   - Check bot has application.commands scope
-   - Verify slash commands are registered
-   - Check user permissions
+### **Reporting Options**
+- **Discord Embeds**: Rich, visual reports
+- **Text Summaries**: Simple, copy-paste friendly format
+- **Multiple Periods**: 7 days, 30 days, 90 days, or all-time data
 
-### **Log Locations**
-- Pterodactyl console logs
-- MongoDB Atlas logs
-- Discord Developer Portal
+## 🛠️ **Technical Details**
 
-## 🔄 Updates
+### **Dependencies**
+- Discord.js v14+
+- MongoDB for data persistence
+- Node.js 16+
 
-### **Updating the Bot**
-1. Upload new files to Pterodactyl
-2. Restart the server
-3. Monitor logs for any errors
-4. Test commands to ensure functionality
+### **Environment Variables**
+- `DISCORD_TOKEN` - Your Discord bot token
+- `MONGODB_URI` - MongoDB connection string
 
-### **Database Migrations**
-- MongoDB automatically handles schema changes
-- No manual migration required
-- Data is preserved across updates
+### **Data Storage**
+- **User Progress**: Training status, quiz results, role completion
+- **Configuration**: Onboarding steps, quiz questions, vacancy settings
+- **Applications**: Job applications with status tracking
+- **Analytics**: Performance metrics and reporting data
 
-## 📞 Support
+## 🚀 **Getting Started**
 
-For issues or questions:
-- Check Pterodactyl logs
-- Verify environment variables
-- Test database connectivity
-- Review Discord bot permissions
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd X-Ample-Trainer
+   ```
 
-## 🎉 Success Indicators
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-When properly deployed, you should see:
-- ✅ "Connected to MongoDB successfully!"
-- ✅ "Database indexes created successfully!"
-- ✅ "Logged in as X-Ample Training#XXXX!"
-- ✅ Commands responding in Discord
-- ✅ Users able to start training
+3. **Set up environment variables**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your Discord token and MongoDB URI
+   ```
+
+4. **Configure your Discord server**
+   - Create the required roles (XD | Support, XD | Administrator, XD | SLT)
+   - Set up the Config Role
+   - Invite the bot with appropriate permissions
+
+5. **Start the bot**
+   ```bash
+   npm start
+   ```
+
+## 🔧 **Configuration**
+
+### **Setting Up Training Content**
+- Configure onboarding steps in `data.js`
+- Add quiz questions for each role
+- Set up branching scenarios for decision-making practice
+
+### **Configuring Job Vacancies**
+- Set announcement channel with `/vacancies setchannel`
+- Add job positions with `/vacancies add`
+- Configure auto-announcements for new vacancies
+
+### **Customizing Leadership Tools**
+- Adjust analytics periods and report formats
+- Configure staff management permissions
+- Set up automated reporting schedules
+
+## 📈 **Future Enhancements**
+
+### **Planned Features**
+- **Automated Reminders**: Training completion notifications
+- **Advanced Analytics**: Machine learning insights
+- **Integration APIs**: Connect with external HR systems
+- **Mobile App**: Companion mobile application
+- **Multi-Server Support**: Manage multiple Discord servers
+
+### **Customization Options**
+- **Branding**: Custom colors and logos
+- **Workflows**: Configurable approval processes
+- **Templates**: Pre-built training and quiz templates
+- **Localization**: Multi-language support
+
+## 🤝 **Support**
+
+For support, questions, or feature requests:
+- Create an issue in the repository
+- Contact the development team
+- Check the documentation for common solutions
+
+## 📄 **License**
+
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ---
 
-**Happy Training! 🚀** 
+**Built with ❤️ for the X-Ample community** 

@@ -201,6 +201,22 @@ const DEFAULT_RESOURCES = {
   ]
 };
 
+// Get default configuration
+function getDefaultConfig() {
+  return {
+    onboarding: {},
+    quizzes: {},
+    resources: {},
+    announceChannel: null,
+    reminderFrequencyHours: 24,
+    vacancies: {
+      channel: null,
+      positions: {},
+      applications: {}
+    }
+  };
+}
+
 // Initialize database connection and data
 let isInitialized = false;
 let data = {
@@ -212,7 +228,12 @@ let data = {
     quizzes: {},
     resources: {},
     announceChannel: null,
-    reminderFrequencyHours: 24
+    reminderFrequencyHours: 24,
+    vacancies: {
+      channel: null,
+      positions: {},
+      applications: {}
+    }
   }
 };
 
@@ -261,6 +282,7 @@ function ensureDefaults(config) {
   if (!config.onboarding) config.onboarding = {};
   if (!config.quizzes) config.quizzes = {};
   if (!config.resources) config.resources = {};
+  if (!config.vacancies) config.vacancies = { channel: null, positions: {}, applications: {} };
   
   // Only apply defaults if they're missing (don't overwrite existing data)
   for (const key of Object.keys(DEFAULT_ONBOARDING)) {
